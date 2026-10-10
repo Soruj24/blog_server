@@ -10,7 +10,7 @@ Rules:
 - Determine the appropriate technical depth.
 - Suggest unique angles that differentiate from generic coverage.
 
-Output MUST be valid JSON matching the ResearchResult schema.`;
+Output MUST be va  lid JSON matching the ResearchResult schema.`;
 
 export function researchUserPrompt(topic: string, context?: string): string {
   return `Analyze the following topic for a professional blog article:

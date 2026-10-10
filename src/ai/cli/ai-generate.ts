@@ -1,16 +1,3 @@
-/**
- * AI-powered seed data generation CLI.
- *
- * Usage:
- *   npx tsx src/ai/cli/ai-generate.ts posts --count=10
- *   npx tsx src/ai/cli/ai-generate.ts posts --topics="React hooks,TypeScript generics"
- *   npx tsx src/ai/cli/ai-generate.ts single --topic="Modern CSS Layout Techniques"
- *
- * Environment:
- *   AI_PROVIDER=ollama (required — uses local Gemma)
- *   OLLAMA_MODEL=gemma4
- *   MONGODB_URI=...
- */
 
 import mongoose from "mongoose";
 import { connectDB } from "../../config/db.js";
