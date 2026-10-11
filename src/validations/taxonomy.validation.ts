@@ -18,6 +18,9 @@ export const createCategorySchema = z.object({
       slug: slugField(80).optional(),
       description: z.string().trim().max(300).default(""),
       color: hexColor,
+      icon: z.string().trim().max(12).default(""),
+      seoTitle: z.string().trim().max(70).default(""),
+      seoDescription: z.string().trim().max(160).default(""),
       order: z.number().int().min(0).max(1000).default(0),
       isActive: z.boolean().default(true),
     })
@@ -34,6 +37,9 @@ export const updateCategorySchema = z.object({
       slug: slugField(80).optional(),
       description: z.string().trim().max(300).optional(),
       color: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, "Color must be hex like #0f172a").nullable().optional(),
+      icon: z.string().trim().max(12).optional(),
+      seoTitle: z.string().trim().max(70).optional(),
+      seoDescription: z.string().trim().max(160).optional(),
       order: z.number().int().min(0).max(1000).optional(),
       isActive: z.boolean().optional(),
     })

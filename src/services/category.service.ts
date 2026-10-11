@@ -11,7 +11,7 @@ import type {
 /** Public category directory — active only, nav order. Counts ride along. */
 export async function listCategories() {
   return Category.find({ isActive: true })
-    .select("name slug description color postCount")
+    .select("name slug description color icon seoTitle seoDescription postCount")
     .sort({ order: 1, name: 1 })
     .lean();
 }
@@ -19,7 +19,7 @@ export async function listCategories() {
 /** Admin directory — includes hidden categories and management fields. */
 export async function listAllCategories() {
   return Category.find({})
-    .select("name slug description color order isActive postCount createdAt")
+    .select("name slug description color icon seoTitle seoDescription order isActive postCount createdAt")
     .sort({ order: 1, name: 1 })
     .lean();
 }
@@ -35,6 +35,8 @@ export async function recomputeCategoryCount(id: unknown) {
 export async function createCategory(input: CreateCategoryInput) {
   input.name = stripHtml(input.name).trim();
   if (input.description) input.description = stripHtml(input.description).trim();
+  if (input.seoTitle) input.seoTitle = stripHtml(input.seoTitle).trim();
+  if (input.seoDescription) input.seoDescription = stripHtml(input.seoDescription).trim();
   const nameClash = await Category.exists({ name: input.name });
   if (nameClash) throw new ApiError(409, "Category name already exists");
   const slug = await uniqueSlug(
@@ -55,6 +57,8 @@ export async function updateCategory(id: string, input: UpdateCategoryInput) {
   if (input.description !== undefined && input.description !== null) {
     input.description = stripHtml(input.description).trim();
   }
+  if (input.seoTitle) input.seoTitle = stripHtml(input.seoTitle).trim();
+  if (input.seoDescription) input.seoDescription = stripHtml(input.seoDescription).trim();
   const patch: Record<string, unknown> = { ...input };
   if (input.slug) patch["slug"] = await uniqueSlug(Category, input.slug, id);
   const category = await Category.findByIdAndUpdate(id, patch, {

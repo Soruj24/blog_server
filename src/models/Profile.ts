@@ -29,6 +29,18 @@ const profileSchema = new Schema(
       match: [/^[a-z0-9_]+$/, "Username may only contain a-z, 0-9 and _"],
     },
     displayName: { type: String, required: true, trim: true, maxlength: 80 },
+    // Professional headline shown on the author page + directory
+    // (e.g. "ML Engineer & AI Writer"). Free text, never verified.
+    title: { type: String, default: "", trim: true, maxlength: 80 },
+    // Writing specialties shown as chips (e.g. ["LLMs", "MLOps"]).
+    expertise: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: (v: string[]) => v.length <= 10 && v.every((s) => s.length <= 40),
+        message: "At most 10 areas of expertise, 40 chars each",
+      },
+    },
     bio: { type: String, default: "", trim: true, maxlength: 500 },
     // CDN URL for fast reads; the upload itself is tracked in Media.
     avatarUrl: { type: String, default: null, maxlength: 1024 },

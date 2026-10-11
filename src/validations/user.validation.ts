@@ -24,6 +24,8 @@ export const updateProfileSchema = z.object({
   body: z
     .object({
       displayName: z.string().trim().min(2).max(80).optional(),
+      title: z.string().trim().max(80).optional(),
+      expertise: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
       bio: z.string().trim().max(500).optional(),
       avatarUrl: z.string().trim().max(1024).nullable().optional(),
       coverUrl: z.string().trim().max(1024).nullable().optional(),

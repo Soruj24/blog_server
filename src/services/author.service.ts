@@ -5,6 +5,8 @@ import { ApiError } from "../utils/ApiError.js";
 export interface AuthorProfile {
   username: string;
   displayName: string;
+  title: string;
+  expertise: string[];
   bio: string;
   avatarUrl: string | null;
   coverUrl: string | null;
@@ -47,6 +49,8 @@ export async function getAuthorProfile(username: string): Promise<AuthorProfile>
   return {
     username: profile.username,
     displayName: profile.displayName,
+    title: profile.title ?? "",
+    expertise: profile.expertise ?? [],
     bio: profile.bio ?? "",
     avatarUrl: profile.avatarUrl ?? user.image ?? null,
     coverUrl: profile.coverUrl ?? null,
@@ -61,5 +65,48 @@ export async function getAuthorProfile(username: string): Promise<AuthorProfile>
     totalViews: views[0]?.total ?? 0,
     joinedAt: user.createdAt ? user.createdAt.toISOString() : null,
     name: profile.displayName || user.name,
+  };
+}
+
+export interface DirectoryAuthor {
+  username: string;
+  displayName: string;
+  title: string;
+  expertise: string[];
+  bio: string;
+  avatarUrl: string | null;
+  location: string | null;
+  followerCount: number;
+  postCount: number;
+}
+
+/**
+ * Public author directory — every profile, including writers with zero
+ * published posts (unlike the popular leaderboard). Sorted by output,
+ * then followers. Paginated; limit capped by validation (max 50).
+ */
+export async function listAuthors(page: number, limit: number) {
+  const skip = (page - 1) * limit;
+  const [items, total] = await Promise.all([
+    Profile.find({})
+      .select(
+        "username displayName title expertise bio avatarUrl location followerCount postCount",
+      )
+      .sort({ postCount: -1, followerCount: -1, displayName: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean<DirectoryAuthor[]>(),
+    Profile.countDocuments({}),
+  ]);
+  return {
+    items: items.map((a) => ({
+      ...a,
+      title: a.title ?? "",
+      expertise: a.expertise ?? [],
+      bio: a.bio ?? "",
+    })),
+    total,
+    page,
+    limit,
   };
 }

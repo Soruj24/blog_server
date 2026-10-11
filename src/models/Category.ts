@@ -23,6 +23,13 @@ const categorySchema = new Schema(
       default: null,
       match: [/^#[0-9a-fA-F]{6}$/, "Color must be hex like #0f172a"],
     },
+    // Emoji/short glyph shown on directory tiles (e.g. "🤖"). Purely
+    // presentational; feeds and slugs never depend on it.
+    icon: { type: String, default: "", trim: true, maxlength: 12 },
+    // Optional per-category SEO overrides. Hub pages fall back to
+    // generated titles/descriptions when these are empty.
+    seoTitle: { type: String, default: "", trim: true, maxlength: 70 },
+    seoDescription: { type: String, default: "", trim: true, maxlength: 160 },
     order: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true, index: true },
     postCount: { type: Number, default: 0, min: 0 },
