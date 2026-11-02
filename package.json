@@ -4,19 +4,19 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node scripts/dev.mjs",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "seed": "tsx src/seed.ts",
-    "seed:fresh": "tsx src/seed.ts --fresh",
-    "seed:categories": "tsx src/seed-categories.ts",
-    "seed:authors": "tsx src/seed-authors.ts",
-    "seed:drafts": "tsx src/seed-drafts.ts",
-    "db:sync": "tsx src/sync-indexes.ts",
-    "ai:generate": "tsx src/ai/cli/ai-generate.ts posts",
-    "ai:generate:posts": "tsx src/ai/cli/ai-generate.ts posts",
-    "ai:generate:single": "tsx src/ai/cli/ai-generate.ts single"
+    "seed": "npm run build && node dist/seed.js",
+    "seed:fresh": "npm run build && node dist/seed.js --fresh",
+    "seed:categories": "npm run build && node dist/seed-categories.js",
+    "seed:authors": "npm run build && node dist/seed-authors.js",
+    "seed:drafts": "npm run build && node dist/seed-drafts.js",
+    "db:sync": "npm run build && node dist/sync-indexes.js",
+    "ai:generate": "npm run build && node dist/ai/cli/ai-generate.js posts",
+    "ai:generate:posts": "npm run build && node dist/ai/cli/ai-generate.js posts",
+    "ai:generate:single": "npm run build && node dist/ai/cli/ai-generate.js single"
   },
   "keywords": [],
   "author": "",
@@ -47,8 +47,7 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.2.0",
     "@types/node": "^26.4.1",
-    "tsx": "^4.23.13",
-    "typescript": "^7.0.2",
+    "typescript": "5.9.3",
     "vitest": "^5.0.0"
   }
 }
