@@ -20,12 +20,10 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().optional().default(""),
 
   // Configurable AI provider — no SDK lock-in, plain HTTPS via fetch.
-  // Supports OpenRouter/Groq (OpenAI-compatible) + local Ollama (deep agent)
-  AI_PROVIDER: z.enum(["openrouter", "groq", "ollama", "none"]).default("none"),
+  // OpenRouter/Groq are OpenAI-compatible; no local models.
+  AI_PROVIDER: z.enum(["openrouter", "groq", "none"]).default("none"),
   AI_API_KEY: z.string().optional().default(""),
-  AI_MODEL: z.string().optional().default(""),
-  OLLAMA_BASE_URL: z.string().url().optional().default("http://127.0.0.1:11434"),
-  OLLAMA_MODEL: z.string().optional().default("gemma4"),
+  AI_MODEL: z.string().optional().default("google/gemini-2.5-flash"),
   // Cost awareness: max tokens per request to bound cost
   AI_MAX_TOKENS: z.coerce.number().default(2000),
   AI_RATE_LIMIT_PER_MIN: z.coerce.number().default(20),

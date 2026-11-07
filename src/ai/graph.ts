@@ -1,5 +1,5 @@
 /**
- * LangGraph-inspired deep agent for Ollama Gemma.
+ * LangGraph-inspired deep agent for the configured LLM provider.
  * Lightweight state-graph without external deps: nodes are async functions,
  * edges are conditional transitions. Mimics LangGraph's StateGraph pattern
  * for the editorial workflow: research → outline → draft → critique → refine.

@@ -53,7 +53,7 @@ function parseArgs(): { command: string; count: number; topics?: string[] } {
 async function generatePosts(count: number, topics?: string[]) {
   const selectedTopics = topics?.length ? topics : DEFAULT_TOPICS.slice(0, count);
 
-  console.log(`\n[ai:generate] Generating ${selectedTopics.length} posts via ${env.AI_PROVIDER}/${env.OLLAMA_MODEL}`);
+  console.log(`\n[ai:generate] Generating ${selectedTopics.length} posts via ${env.AI_PROVIDER}/${env.AI_MODEL}`);
   console.log(`[ai:generate] Concurrency: ${env.AI_GEN_CONCURRENCY}\n`);
 
   const results = await generateBlogs({
@@ -86,7 +86,7 @@ async function generatePosts(count: number, topics?: string[]) {
 
 async function generateSingle(topic: string) {
   console.log(`\n[ai:generate] Generating single post: "${topic}"`);
-  console.log(`[ai:generate] Provider: ${env.AI_PROVIDER}/${env.OLLAMA_MODEL}\n`);
+  console.log(`[ai:generate] Provider: ${env.AI_PROVIDER}/${env.AI_MODEL}\n`);
 
   const result = await generateBlog({
     topic,
@@ -117,7 +117,7 @@ async function main() {
   }
 
   if (env.AI_PROVIDER === "none") {
-    console.error("[ai:generate] AI_PROVIDER is 'none'. Set AI_PROVIDER=ollama for live generation.");
+    console.error("[ai:generate] AI_PROVIDER is 'none'. Set AI_PROVIDER=openrouter or groq for live generation.");
     process.exit(1);
   }
 

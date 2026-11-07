@@ -1,15 +1,13 @@
 import { aiComplete, aiStream, estimateCost, getModelCostHint } from "../config/ai.js";
 import { env } from "../config/env.js";
-import { DeepAgentGraph } from "../ai/graph.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const SYSTEM_EDITOR =
   "You are Inkwell's editorial assistant. Help authors craft clear, engaging blog posts. Be concise, professional, and never hallucinate facts. Use Markdown where helpful.";
 
 /**
- * Call Ollama with automatic retry: first try with system message, then without
- * if the model returns empty. Gemma 4 returns empty for certain prompt+system combos
- * and for low num_predict values (non-deterministic).
+ * Call the configured AI provider, retrying once without the system message if
+ * the model returns an empty response.
  */
 async function callWithRetry(
   prompt: string,
@@ -17,26 +15,6 @@ async function callWithRetry(
   maxTokens: number,
   label: string,
 ): Promise<string> {
-  // For Ollama/Gemma: skip system message, use higher token floor
-  if (env.AI_PROVIDER === "ollama") {
-    // Gemma 4 needs higher num_predict to avoid empty responses
-    const safeTokens = Math.max(maxTokens, 250);
-    console.log(`[ai:service] ${label}: calling ollama (maxTokens=${safeTokens})`);
-
-    // Up to 3 attempts with increasing token limits
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      const tokens = safeTokens + (attempt - 1) * 150;
-      const out = await aiComplete({ prompt, system: undefined, maxTokens: tokens });
-      if (out && out.trim()) {
-        console.log(`[ai:service] ${label}: success on attempt ${attempt} (${out.trim().length} chars)`);
-        return out.trim();
-      }
-      console.warn(`[ai:service] ${label}: empty on attempt ${attempt} (num_predict=${tokens})`);
-    }
-    throw new ApiError(502, `AI returned empty response for ${label} after 3 attempts`);
-  }
-
-  // For other providers: try with system, retry without
   const out = await aiComplete({ prompt, system, maxTokens });
   if (out && out.trim()) return out.trim();
 
@@ -57,7 +35,7 @@ function validateLength(text: string, field: string, min: number, max: number) {
 
 function costMeta(prompt: string, output: string) {
   const c = estimateCost(prompt, output);
-  return { ...c, hint: getModelCostHint(env.AI_MODEL || env.OLLAMA_MODEL) };
+  return { ...c, hint: getModelCostHint(env.AI_MODEL) };
 }
 
 function mockResult(prompt: string, output: string) {
@@ -146,49 +124,8 @@ export const aiService = {
   async generateArticle(topic: string, outline?: string) {
     validateLength(topic, "Topic", 3, 300);
     if (env.AI_PROVIDER === "none") {
-      const mock = `# ${topic}\n\n## Introduction\n${topic} is reshaping how teams build and think. This draft explores the essentials.\n\n## Why it matters\nReaders need clarity, not hype. Focus on fundamentals and practical trade-offs.\n\n## Practical steps\n1. Start small and measure\n2. Document decisions\n3. Iterate with feedback\n\n## Conclusion\nA concise path forward for ${topic}. (Demo draft — configure AI_PROVIDER for live Gemma generation)`;
+      const mock = `# ${topic}\n\n## Introduction\n${topic} is reshaping how teams build and think. This draft explores the essentials.\n\n## Why it matters\nReaders need clarity, not hype. Focus on fundamentals and practical trade-offs.\n\n## Practical steps\n1. Start small and measure\n2. Document decisions\n3. Iterate with feedback\n\n## Conclusion\nA concise path forward for ${topic}. (Demo draft — configure AI_PROVIDER for live AI generation)`;
       return mockResult(PROMPTS.article(topic, outline), mock);
-    }
-    if (env.AI_PROVIDER === "ollama") {
-      const graph = new DeepAgentGraph()
-        .addNode("outline", async (s) => {
-          const o = outline || (await aiComplete({ prompt: PROMPTS.outline(s.topic), system: SYSTEM_EDITOR, maxTokens: 400 })) || "";
-          return { outline: o };
-        })
-        .addNode("draft", async (s) => {
-          const d = (await aiComplete({ prompt: PROMPTS.article(s.topic, s.outline), system: SYSTEM_EDITOR, maxTokens: 1000 })) || "";
-          return { draft: d, final: d };
-        })
-        .addNode("critique", async (s) => {
-          const c =
-            (await aiComplete({
-              prompt: `Critique this draft for clarity, flow, and engagement (2-3 sentences):\n\n${s.draft}`,
-              system: SYSTEM_EDITOR,
-              maxTokens: 200,
-            })) || "";
-          return { critique: c };
-        })
-        .addNode("refine", async (s) => {
-          const f =
-            (await aiComplete({
-              prompt: `Refine the article based on critique: "${s.critique}"\n\nDraft:\n${s.draft}`,
-              system: SYSTEM_EDITOR,
-              maxTokens: 1000,
-            })) || s.draft;
-          return { final: f || "" };
-        })
-        .addEdge("outline", "draft")
-        .addEdge("draft", "critique")
-        .addEdge("critique", "refine");
-      try {
-        const state = await graph.run("outline", { topic, outline, final: "", tokens: 0 });
-        const final = state.final.trim();
-        if (!final) throw new ApiError(502, "Deep agent produced empty article");
-        return { result: final, ...costMeta(topic + (outline || ""), final) };
-      } catch (err) {
-        console.error(`[ai:service] generateArticle (deep agent) failed: ${(err as Error).message}`);
-        throw err instanceof ApiError ? err : new ApiError(502, `Deep agent article generation failed: ${(err as Error).message}`);
-      }
     }
     const prompt = PROMPTS.article(topic, outline);
     try {
